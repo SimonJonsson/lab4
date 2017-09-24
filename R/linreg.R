@@ -1,7 +1,8 @@
 library(ggplot2)
 #' A RC class for linear regression models
 #'@field formula A formula
-#'@field data A dataset which we apply the formula
+#'@field data A dataset which we apply the formula (data.frame)
+#'@export linreg
 #'@export
 linreg <- setRefClass(
   "linreg",
@@ -21,7 +22,7 @@ linreg <- setRefClass(
     initialize = function(formula, data) {
       # Intercept formula and data before assignment
       call <<- c("linreg(formula = ",
-                 deparse(substitute(formula)),
+                 Reduce(paste,deparse(formula)),
                  ", data = ",
                  deparse(substitute(data)),
                  ")")
@@ -57,27 +58,34 @@ linreg <- setRefClass(
       t_vals <<- as.numeric(beta_hat) / sqrt(var_beta)
     },
     print = function() {
+      "Prints the call of the class and regression coefficients in named vector"
       # Print call
-      cat("Call:\n")
+      cat("\nCall:\n")
       lapply(call, cat)
 
       # Print coefficients
-      cat("\n \n")
+      cat("\n\n")
       cat("Coefficients:\n")
       coef()
     },
     plot = function() {
+      "Provides a plot for \'Scale-Location\' and \'Residuals vs. Fitted\',
+      returns a list of the two plots, accessed $p1 and $p2"
       plot_dat <- data.frame(dat_e = e_hat, dat_y = y_hat)
+      liu_col_blu <- "#68B7D1"
+      liu_col_blk <- "#333333"
       plot_theme <-
         theme(plot.background = element_rect(fill = "#e8e8e8"),
-              panel.background = element_rect(fill = "white"))
+              panel.background = element_rect(fill = "white"),
+              axis.line.x = element_line(color=liu_col_blk, size = 1),
+              axis.line.y = element_line(color=liu_col_blk, size = 1))
       plot_rvf <-
         ggplot(data = plot_dat, aes(x = y_hat, y = e_hat)) +
         xlab(paste("Fitted values\n", call[2])) +
         ylab("Residuals") +
         ggtitle("Residuals vs Fitted") +
-        geom_point() +
-        geom_smooth(se=FALSE) +
+        geom_point(color=liu_col_blk) +
+        geom_smooth(se=FALSE,color=liu_col_blu) +
         geom_abline(slope=0,intercept=0,linetype="dotted") +
         plot_theme
 
@@ -87,29 +95,34 @@ linreg <- setRefClass(
         ylab(expression(sqrt("Standardized residuals"))) +
         xlab(paste("Fitted values\n", call[2])) +
         ggtitle("Scale-Location") +
-        geom_point() +
-        geom_smooth(se=FALSE) +
+        geom_point(color=liu_col_blk) +
+        geom_smooth(se=FALSE,color=liu_col_blu) +
         plot_theme
       return(list(p1 = plot_scale, p2 = plot_rvf))
     },
     resid = function() {
+      "Returns residual values"
       return(e_hat)
     },
     pred = function() {
+      "Returns fitted values"
       return(y_hat)
     },
     coef = function() {
+      "Returns the regression coefficients"
       dummy <- c(t(beta_hat))
       names(dummy) <- row.names(beta_hat)
       return(dummy)
     },
     summary = function() {
+      "Provides a summary of Estimate, standard error, t values and
+      p-values for linear regression coefficients"
       # Print call
       cat("Call:\n")
       lapply(call, cat)
 
       # Print coefficients
-      cat("\n \n")
+      cat("\n\n")
       cat("Coefficients:\n")
 
       dummy <- cbind(round(beta_hat,3),
@@ -118,7 +131,7 @@ linreg <- setRefClass(
                      round(as.numeric(pt(abs(t_vals),df = degf)),3))
       colnames(dummy) <- c("Estimate", "Std. Error", "t value", "Pr(>|t|)")
       print.default(dummy)
-      temp <- c("--- \n \nResidual standard error: ",
+      temp <- c("--- \n\nResidual standard error: ",
                 round(sqrt(res_var),4),
                 " on ",
                 degf,
@@ -131,6 +144,4 @@ linreg <- setRefClass(
 
 
 data(iris)
-X <- linreg$new(formula = Petal.Length ~ Species, data = iris)
-Y <- X$plot()
-Y$p1
+X <- linreg$new(Petal.Length~Sepal.Width+Sepal.Length, data=iris)
