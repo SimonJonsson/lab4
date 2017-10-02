@@ -66,12 +66,32 @@ linreg <- setRefClass(
       # Print coefficients
       cat("\n\n")
       cat("Coefficients:\n")
-      coef()
+
+      # Ackowledgement to Erik Herwin and Albin Västerlund
+      # - since my print with return didn't pass the tests (which is bullshit)
+      beta<-as.numeric(beta_hat)
+      namn<-row.names(beta_hat)
+      names(beta) <- NULL
+      beta<-round(beta,4)
+
+      for(i in 2:length(beta)){
+        beta[i]<-format(beta[i], width=max(nchar(beta[i]),nchar(namn[i])),justify = c("right"))
+        namn[i]<-format(namn[i], width=max(nchar(beta[i]),nchar(namn[i])),justify = c("right"))
+      }
+
+      beta[1]<-format(beta[1], width=max(nchar(beta[1]),nchar(namn[1]),nchar("Coefficients")),justify = c("right"))
+      namn[1]<-format(namn[1], width=max(nchar(beta[1]),nchar(namn[1]),nchar("Coefficients")),justify = c("right"))
+
+      beta[1]<-paste(beta[1]," ",sep="")
+      namn[1]<-paste(namn[1]," ",sep="")
+
+      cat(paste(namn,collapse = "  "),sep="",collapse="\n")
+      cat(paste(beta,collapse = "  "),sep="",collapse="\n")
     },
     plot = function() {
       "Provides a plot for \'Scale-Location\' and \'Residuals vs. Fitted\',
       returns a list of the two plots, accessed $p1 and $p2"
-      plot_dat <- data.frame(dat_e = e_hat, dat_y = y_hat)
+      plot_dat <- data.frame(dat_e = e_hat, dat_y = y_hat, std_resid = sqrt(abs(scale(as.numeric(e_hat)))))
       liu_col_blu <- "#68B7D1"
       liu_col_blk <- "#333333"
       plot_theme <-
@@ -91,7 +111,7 @@ linreg <- setRefClass(
 
       plot_scale <-
         ggplot(data = plot_dat,
-               aes(x = y_hat, y = sqrt(abs((dat_e- mean(dat_e)) / sqrt(res_var))))) +
+               aes(x = y_hat, y = std_resid)) +
         ylab(expression(sqrt("Standardized residuals"))) +
         xlab(paste("Fitted values\n", call[2])) +
         ggtitle("Scale-Location") +
@@ -141,7 +161,3 @@ linreg <- setRefClass(
     }
   )
 )
-
-
-data(iris)
-X <- linreg$new(Petal.Length~Sepal.Width+Sepal.Length, data=iris)

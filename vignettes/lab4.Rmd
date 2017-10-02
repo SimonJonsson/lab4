@@ -2,7 +2,7 @@
 title: "Lab4"
 author: "Simon Jonsson, Fanny Karelius"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
@@ -54,17 +54,17 @@ linreg_ex$plot()
 
 **resid()** returns a vector of residuals $\mathbf{\hat{e}}$
 ```{r}
-linreg_ex$resid()
+head(linreg_ex$resid())
 ```
 
 **pred()** returns the predicted values $\mathbf{\hat{y}}$ 
 ```{r}
-linreg_ex$pred()
+head(linreg_ex$pred())
 ```
 
 **coef()** returns the coefficients as a **named** vector
 ```{r}
-linreg_ex$coef()
+head(linreg_ex$coef())
 ```
 
 **summary()** prints out the coefficients with their **standard error**, **t-value**, and **p-value** as well as the estimate of $\hat{\sigma}$ and the degrees of freedom in the model
